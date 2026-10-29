@@ -1,58 +1,129 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# LAWNU JATIM
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Website resmi **Lembaga Aset dan Wakaf (LAW) Pengurus Wilayah Nahdlatul Ulama Jawa Timur** — portal informasi digital untuk pengelolaan, pendataan, publikasi, dan pemberdayaan aset wakaf di Jawa Timur.
 
-## About Laravel
+## Latar Belakang & Tujuan
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+Lembaga Aset dan Wakaf PWNU Jatim memiliki peran strategis dalam pengelolaan, pendataan, pengamanan, pengembangan, dan pemberdayaan aset wakaf serta pertanahan di lingkungan Nahdlatul Ulama. Website ini dibangun dengan tujuan:
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+1. **Portal informasi resmi** — pusat berita, profil, regulasi, dan dokumentasi kegiatan lembaga yang terstruktur dan mudah diakses.
+2. **Manajemen konten mandiri** — pengurus, reporter, dan redaksi dapat mengelola konten secara mandiri melalui CMS berbasis web (mirip konsep WordPress, namun custom dengan Laravel).
+3. **Alur kerja editorial** — berita dan galeri dari reporter melalui proses review redaktur sebelum dipublikasikan, sehingga kualitas konten terjaga.
+4. **Interaksi dua arah** — pengunjung dapat berkirim pesan/kontak dengan sistem tiket pelacakan status, memberi rating pada berita, serta mendaftar menjadi kontributor (reporter/redaktur).
+5. **Transparansi & akuntabilitas** — seluruh aktivitas pengelolaan terekam dalam activity log, dan data lembaga tersimpan rapi dalam database terpusat.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Perubahan dari Website Lama (LWP)
 
-## Learning Laravel
+Website sebelumnya adalah **Website Lembaga Wakaf dan Pertanahan (LWP)** dengan nama "LWP PWNU Jatim". Versi ini merupakan pembaruan besar:
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+| Aspek | Website Lama (LWP) | Website Baru (LAWNU JATIM) |
+| --- | --- | --- |
+| Nama & identitas | LWP PWNU Jatim | **LAWNU JATIM** — Lembaga Aset dan Wakaf PWNU Jatim |
+| Struktur menu | Menu datar tanpa submenu | Menu utama ringkas + **submenu** (Wakaf, Pertanahan, Opini, Regulasi, Tokoh, Tanya Jawab, dll. di bawah BERITA) |
+| Beranda | Daftar artikel statis | **Slideshow** 5 berita terbaru + hero profil lembaga |
+| Galeri | Tidak ada | **Galeri Kegiatan** — multi-gambar per kegiatan, caption per gambar, lightbox, alur review redaktur |
+| Registrasi | Tidak ada | **Daftar akun publik** (reporter/redaktur) + verifikasi admin |
+| Kontak | Form biasa | **Sistem tiket** (`TKT-XXXXXX`) + halaman cek status publik + balasan dari admin |
+| Rating | Tidak ada | **Rating bintang** pengunjung per berita (rata-rata & jumlah tercatat) |
+| Peran | Admin saja | 3 peran: **Admin, Reporter, Redaktur** dengan alur kerja submit → review → publish |
+| Media | File manager sederhana | **Media library** dengan pencarian live AJAX, unggah multi, dan proteksi hapus (media di berita published tidak bisa dihapus reporter) |
+| Monitoring | Tidak ada | **Activity log** lengkap + **badge notifikasi** item menunggu review di sidebar & dashboard |
+| Database | MySQL | MySQL (produksi) + SQLite (development) |
+| SEO & UX | Dasar | Slug otomatis, meta title/description, breadcrumb, favicon NU, 100% responsive |
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Fitur
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+### Sisi Publik
+- Beranda dengan slideshow berita terbaru dan profil lembaga.
+- Berita per kategori (Wakaf, Pertanahan, Opini, Regulasi, Tokoh, Tanya Jawab, Dokumen, dll.) dengan breadcrumb dan pagination.
+- Galeri kegiatan multi-gambar dengan caption dan lightbox.
+- Halaman statis (Tentang LAWNU, Visi Misi, Sejarah, Struktur Organisasi, Program).
+- Form kontak dengan **nomor tiket** dan halaman cek status tiket + balasan resmi.
+- Rating bintang pada halaman berita.
+- Halaman pendaftaran kontributor (reporter/redaktur).
+- Menu navigasi dinamis (kelola dari admin via tabel menu).
 
-## Agentic Development
+### Panel Admin
+- Manajemen berita (create/edit/publish/unpublish/reject dengan catatan), filter & pencarian live AJAX, **sortir kolom** (judul, kategori, penulis, tgl publikasi, views), preview tampilan publik.
+- Manajemen **Galeri Kegiatan** (upload multi-gambar, caption per gambar, publish langsung atau via review).
+- Media library (25 per halaman, pencarian live, proteksi hapus untuk media yang dipakai berita published).
+- Manajemen halaman, kategori, tag, dan menu.
+- Manajemen pengguna (modal tambah user), role & permission (spatie/laravelesque-style).
+- **Pendaftaran** kontributor: verifikasi approve/reject (approve otomatis membuat user + role).
+- Pesan kontak: detail, update status, **balas ke pengunjung** (status naik ke `in_progress`).
+- Rating & **Activity Log** dengan filter per modul.
+- Dashboard statistik + banner notifikasi item menunggu review.
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+### Portal Reporter
+- Membuat/mengedit berita & galeri kegiatan (editor TinyMCE).
+- Submit ke redaktur; hanya bisa mengubah item berstatus *draft/rejected*.
+- Dashboard statistik pribadi (terkirim, direview, published, ditolak).
+- Akses media library (unggah & hapus media milik sendiri yang belum dipakai).
+
+### Panel Redaktur
+- Review berita & galeri yang *submitted*: approve (langsung publish) atau reject dengan catatan.
+- Banner notifikasi & badge jumlah item menunggu review.
+- Akses pesan kontak (tampil, detail, ubah status — tanpa hapus).
+
+## Teknologi
+
+| Komponen | Teknologi |
+| --- | --- |
+| Backend | Laravel 13 (PHP 8.3+) |
+| Frontend | Blade + Tailwind CSS + Alpine.js |
+| Editor konten | TinyMCE 7 |
+| Database | MySQL/MariaDB (produksi), SQLite (development) |
+| Queue & cache | Database driver |
+| Testing | PHPUnit (feature & unit) |
+| Format kode | Laravel Pint |
+
+## Menjalankan Lokal
 
 ```bash
-composer require laravel/boost --dev
+# 1. Clone
+git clone https://github.com/nurvanindrapraja/weblawnu.git
+cd weblawnu
 
-php artisan boost:install
+# 2. Dependensi
+composer install
+npm install
+
+# 3. Konfigurasi lingkungan
+cp .env.example .env
+php artisan key:generate
+# Sesuaikan DB_CONNECTION/DB_* di .env (default .env.example: SQLite)
+
+# 4. Database
+php artisan migrate --seed
+php artisan storage:link
+
+# 5. Jalankan
+composer run dev          # atau: npm run dev && php artisan serve
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+Untuk development dengan upload gambar besar, naikkan limit PHP:
 
-## Contributing
+```bash
+php -d upload_max_filesize=20M -d post_max_size=25M artisan serve
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### User Awal (hasil seeder)
 
-## Code of Conduct
+| Role | Username | Password |
+| --- | --- | --- |
+| Admin | `admin` | `password` |
+| Reporter | `reporter` | `password` |
+| Redaktur | `redaktur` | `password` |
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## Catatan Produksi
 
-## Security Vulnerabilities
+- Isi `.env` sesuai hosting: `APP_URL`, `APP_ENV=production`, kredensial MySQL, `SESSION_DOMAIN` bila perlu.
+- File upload (isi `storage/app/public/`) **tidak** ikut di repository — upload manual ke hosting lalu `php artisan storage:link`.
+- Seeding ulang data awal: `php artisan db:seed --class=DatabaseSeeder`.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## Pengujian
 
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+```bash
+php artisan test
+vendor/bin/pint --test
+```
