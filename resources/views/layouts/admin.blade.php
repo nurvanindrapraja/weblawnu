@@ -27,7 +27,7 @@
            :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'">
         <div class="p-4 border-b border-gray-800 shrink-0">
             <a href="/admin/dashboard" class="flex flex-col items-center gap-2">
-                <img src="{{ asset('images/logo_nu_putih.png') }}" alt="Logo Nahdlatul Ulama" class="h-14 w-auto">
+                <img src="{{ asset('images/logo_nu_putih.png') }}" alt="Logo Nahdlatul Ulama" width="85" height="56" class="h-14 w-auto">
                 <span class="text-lg font-bold text-emerald-400 text-center leading-tight">{{ \App\Models\Setting::get('site_name', 'LAWNU JATIM') }} Admin</span>
             </a>
         </div>

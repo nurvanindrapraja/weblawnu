@@ -31,7 +31,7 @@
             <div class="flex items-center justify-between h-16">
                 <!-- Logo -->
                 <a href="/" class="flex items-center gap-3">
-                    <img src="{{ asset('images/logo_nu.webp') }}" alt="Logo Nahdlatul Ulama" class="h-10 w-auto">
+                    <img src="{{ asset('images/logo_nu.webp') }}" alt="Logo Nahdlatul Ulama" width="61" height="40" class="h-10 w-auto">
                     <span class="text-xl font-bold text-emerald-700 whitespace-nowrap">{{ Setting::get('site_name', 'LAWNU JATIM') }}</span>
                 </a>
 
