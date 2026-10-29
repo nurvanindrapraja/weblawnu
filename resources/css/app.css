@@ -1,0 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom base styles */
+@layer base {
+    html {
+        scroll-behavior: smooth;
+    }
+    body {
+        @apply text-gray-900 antialiased;
+    }
+}
+
+@layer components {
+    .prose {
+        @apply leading-relaxed;
+    }
+    .prose p {
+        @apply mb-4;
+    }
+    .prose h2 {
+        @apply text-2xl font-bold text-gray-900 mt-6 mb-3;
+    }
+    .prose h3 {
+        @apply text-xl font-semibold text-gray-900 mt-5 mb-2;
+    }
+    .prose img {
+        @apply rounded-lg my-4 w-full;
+    }
+    .prose ul {
+        @apply list-disc list-inside mb-4;
+    }
+    .prose ol {
+        @apply list-decimal list-inside mb-4;
+    }
+    .prose blockquote {
+        @apply border-l-4 border-emerald-500 pl-4 italic text-gray-600 my-4;
+    }
+    .prose a {
+        @apply text-emerald-600 underline hover:text-emerald-700;
+    }
+    .prose table {
+        @apply w-full text-sm border border-gray-200 my-4;
+    }
+    .prose th {
+        @apply bg-gray-50 px-3 py-2 text-left font-medium border border-gray-200;
+    }
+    .prose td {
+        @apply px-3 py-2 border border-gray-200;
+    }
+
+    .star-btn {
+        @apply text-gray-300 transition-colors cursor-pointer;
+    }
+}
+
+/* TinyMCE integration — keep the editor framed cleanly */
+.mce-content-body {
+    font-family: system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    color: #111827;
+    min-height: 320px;
+}
+/* Collapse the original textarea's border once TinyMCE wraps it */
+.rich-editor {
+    border: none !important;
+}
+.mce-tinymce {
+    width: 100%;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}

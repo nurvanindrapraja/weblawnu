@@ -1,0 +1,2115 @@
+# TECHNICAL DESIGN DOCUMENT
+
+## WEBSITE LEMBAGA WAKAF DAN PERTANAHAN (LWP) PWNU
+
+**Versi:** 1.0
+**Tanggal:** 31 Agustus 2026
+**Stack:** Laravel + Blade + Tailwind CSS + MySQL + AJAX
+
+---
+
+# 1. ARSITEKTUR SISTEM
+
+Arsitektur aplikasi menggunakan pendekatan:
+
+```text
+                    ┌─────────────────────┐
+                    │      INTERNET       │
+                    └──────────┬──────────┘
+                               │
+                               ▼
+                    ┌─────────────────────┐
+                    │   PUBLIC WEBSITE    │
+                    │ Blade + Tailwind    │
+                    └──────────┬──────────┘
+                               │
+                         AJAX / Fetch
+                               │
+                               ▼
+                    ┌─────────────────────┐
+                    │    Laravel App      │
+                    │                     │
+                    │ Controllers         │
+                    │ Form Requests       │
+                    │ Services            │
+                    │ Policies            │
+                    │ Middleware          │
+                    └──────────┬──────────┘
+                               │
+                               ▼
+                    ┌─────────────────────┐
+                    │       MySQL         │
+                    └─────────────────────┘
+```
+
+Untuk backend CMS:
+
+```text
+User
+  │
+  ▼
+Authentication
+  │
+  ▼
+Role / Permission
+  │
+  ▼
+Middleware
+  │
+  ▼
+Controller
+  │
+  ▼
+Form Request Validation
+  │
+  ▼
+Service
+  │
+  ▼
+Model / Eloquent
+  │
+  ▼
+MySQL
+```
+
+---
+
+# 2. ERD / ENTITY RELATIONSHIP DIAGRAM
+
+ERD utama:
+
+```mermaid
+erDiagram
+
+    USERS {
+        bigint id PK
+        varchar name
+        varchar username UK
+        varchar email UK
+        varchar phone
+        varchar password
+        varchar avatar
+        enum status
+        datetime last_login_at
+        timestamps created_at
+        timestamps updated_at
+    }
+
+    ROLES {
+        bigint id PK
+        varchar name UK
+        varchar display_name
+        text description
+        timestamps created_at
+        timestamps updated_at
+    }
+
+    PERMISSIONS {
+        bigint id PK
+        varchar name UK
+        varchar display_name
+        text description
+        timestamps created_at
+        timestamps updated_at
+    }
+
+    ROLE_USER {
+        bigint role_id FK
+        bigint user_id FK
+    }
+
+    PERMISSION_ROLE {
+        bigint permission_id FK
+        bigint role_id FK
+    }
+
+    MENUS {
+        bigint id PK
+        bigint parent_id FK
+        varchar title
+        varchar type
+        varchar url
+        varchar target
+        varchar icon
+        int sort_order
+        boolean is_active
+        timestamps created_at
+        timestamps updated_at
+    }
+
+    PAGES {
+        bigint id PK
+        bigint author_id FK
+        varchar title
+        varchar slug UK
+        text excerpt
+        longtext content
+        bigint featured_media_id FK
+        enum status
+        varchar meta_title
+        text meta_description
+        datetime published_at
+        timestamps created_at
+        timestamps updated_at
+    }
+
+    CATEGORIES {
+        bigint id PK
+        bigint parent_id FK
+        varchar name
+        varchar slug UK
+        text description
+        boolean is_active
+        timestamps created_at
+        timestamps updated_at
+    }
+
+    TAGS {
+        bigint id PK
+        varchar name
+        varchar slug UK
+        timestamps created_at
+        timestamps updated_at
+    }
+
+    POSTS {
+        bigint id PK
+        bigint author_id FK
+        bigint category_id FK
+        bigint featured_media_id FK
+        varchar title
+        varchar slug UK
+        text excerpt
+        longtext content
+        enum status
+        text rejection_note
+        datetime submitted_at
+        datetime reviewed_at
+        datetime published_at
+        bigint reviewed_by FK
+        bigint published_by FK
+        bigint views
+        decimal rating_average
+        bigint rating_count
+        varchar meta_title
+        text meta_description
+        timestamps created_at
+        timestamps updated_at
+    }
+
+    POST_TAG {
+        bigint post_id FK
+        bigint tag_id FK
+    }
+
+    MEDIA {
+        bigint id PK
+        bigint uploaded_by FK
+        varchar filename
+        varchar original_name
+        varchar disk
+        varchar path
+        varchar mime_type
+        bigint size
+        int width
+        int height
+        text alt_text
+        text caption
+        timestamps created_at
+        timestamps updated_at
+    }
+
+    POST_MEDIA {
+        bigint post_id FK
+        bigint media_id FK
+        int sort_order
+    }
+
+    RATINGS {
+        bigint id PK
+        bigint post_id FK
+        tinyint rating
+        varchar visitor_hash
+        varchar session_hash
+        timestamps created_at
+        timestamps updated_at
+    }
+
+    CONTACT_MESSAGES {
+        bigint id PK
+        varchar name
+        varchar email
+        varchar phone
+        varchar subject
+        text message
+        enum status
+        text admin_note
+        bigint handled_by FK
+        datetime handled_at
+        timestamps created_at
+        timestamps updated_at
+    }
+
+    ACTIVITY_LOGS {
+        bigint id PK
+        bigint user_id FK
+        varchar module
+        varchar action
+        bigint record_id
+        text description
+        varchar ip_hash
+        varchar user_agent
+        timestamps created_at
+    }
+
+    SETTINGS {
+        bigint id PK
+        varchar key UK
+        text value
+        varchar type
+        varchar group_name
+        timestamps created_at
+        timestamps updated_at
+    }
+
+    USERS ||--o{ PAGES : creates
+    USERS ||--o{ POSTS : writes
+    USERS ||--o{ POSTS : reviews
+    USERS ||--o{ POSTS : publishes
+    USERS ||--o{ MEDIA : uploads
+    USERS ||--o{ CONTACT_MESSAGES : handles
+    USERS ||--o{ ACTIVITY_LOGS : creates
+
+    ROLES ||--o{ ROLE_USER : has
+    USERS ||--o{ ROLE_USER : assigned
+
+    ROLES ||--o{ PERMISSION_ROLE : grants
+    PERMISSIONS ||--o{ PERMISSION_ROLE : contains
+
+    MENUS ||--o{ MENUS : parent
+
+    CATEGORIES ||--o{ CATEGORIES : parent
+    CATEGORIES ||--o{ POSTS : contains
+
+    POSTS ||--o{ POST_TAG : has
+    TAGS ||--o{ POST_TAG : assigned
+
+    POSTS ||--o{ POST_MEDIA : contains
+    MEDIA ||--o{ POST_MEDIA : attached
+
+    POSTS ||--o{ RATINGS : receives
+
+    MEDIA ||--o{ PAGES : featured
+    MEDIA ||--o{ POSTS : featured
+```
+
+---
+
+# 3. DATABASE SCHEMA
+
+## 3.1 users
+
+Menggunakan tabel `users` standar Laravel dengan beberapa tambahan.
+
+| Field         | Type            | Keterangan      |
+| ------------- | --------------- | --------------- |
+| id            | BIGINT UNSIGNED | PK              |
+| name          | VARCHAR(150)    | Nama lengkap    |
+| username      | VARCHAR(50)     | Username unik   |
+| email         | VARCHAR(150)    | Email           |
+| phone         | VARCHAR(30)     | Nomor HP        |
+| password      | VARCHAR(255)    | Password hash   |
+| avatar        | VARCHAR(255)    | Path avatar     |
+| status        | ENUM            | active/inactive |
+| last_login_at | DATETIME NULL   | Login terakhir  |
+| created_at    | TIMESTAMP       |                 |
+| updated_at    | TIMESTAMP       |                 |
+
+Index:
+
+```text
+UNIQUE(username)
+UNIQUE(email)
+INDEX(status)
+```
+
+---
+
+# 4. ROLE DAN PERMISSION
+
+Saya merekomendasikan RBAC menggunakan tabel terpisah agar ke depan mudah ditambah role baru.
+
+## 4.1 roles
+
+```text
+id
+name
+display_name
+description
+created_at
+updated_at
+```
+
+Data awal:
+
+```text
+admin
+reporter
+redaktur
+```
+
+## 4.2 permissions
+
+Contoh:
+
+```text
+dashboard.view
+
+users.view
+users.create
+users.update
+users.delete
+
+roles.view
+roles.create
+roles.update
+roles.delete
+
+menus.view
+menus.create
+menus.update
+menus.delete
+
+pages.view
+pages.create
+pages.update
+pages.delete
+pages.publish
+
+posts.view
+posts.create
+posts.update
+posts.delete
+posts.submit
+posts.review
+posts.approve
+posts.reject
+posts.publish
+posts.unpublish
+
+categories.view
+categories.create
+categories.update
+categories.delete
+
+tags.view
+tags.create
+tags.update
+tags.delete
+
+media.view
+media.upload
+media.update
+media.delete
+
+ratings.view
+ratings.delete
+
+contact.view
+contact.update
+contact.delete
+
+settings.view
+settings.update
+
+activity_logs.view
+```
+
+## 4.3 role_user
+
+```text
+role_id
+user_id
+```
+
+Composite primary key:
+
+```text
+PRIMARY KEY(role_id, user_id)
+```
+
+## 4.4 permission_role
+
+```text
+permission_id
+role_id
+```
+
+Composite primary key:
+
+```text
+PRIMARY KEY(permission_id, role_id)
+```
+
+---
+
+# 5. MENUS
+
+## 5.1 menus
+
+```text
+id
+parent_id
+title
+type
+url
+target
+icon
+sort_order
+is_active
+created_at
+updated_at
+```
+
+### type
+
+```text
+page
+post
+category
+custom
+dropdown
+```
+
+### target
+
+```text
+_self
+_blank
+```
+
+`parent_id` digunakan untuk membuat submenu.
+
+Contoh:
+
+```text
+Profil
+ ├── Tentang LWP
+ ├── Sejarah
+ ├── Visi & Misi
+ └── Struktur Organisasi
+```
+
+---
+
+# 6. PAGES
+
+Digunakan untuk halaman statis.
+
+```text
+id
+author_id
+title
+slug
+excerpt
+content
+featured_media_id
+status
+meta_title
+meta_description
+published_at
+created_at
+updated_at
+```
+
+Status:
+
+```text
+draft
+published
+archived
+```
+
+Contoh:
+
+```text
+/tentang-lwp
+/sejarah
+/visi-misi
+/struktur-organisasi
+```
+
+---
+
+# 7. CATEGORIES
+
+```text
+id
+parent_id
+name
+slug
+description
+is_active
+created_at
+updated_at
+```
+
+Mendukung kategori bertingkat.
+
+Contoh:
+
+```text
+Berita
+ ├── Organisasi
+ ├── Wakaf
+ ├── Pertanahan
+ └── Kegiatan
+```
+
+---
+
+# 8. TAGS
+
+```text
+id
+name
+slug
+created_at
+updated_at
+```
+
+Index:
+
+```text
+UNIQUE(slug)
+```
+
+---
+
+# 9. POSTS
+
+Tabel utama berita.
+
+```text
+id
+author_id
+category_id
+featured_media_id
+
+title
+slug
+excerpt
+content
+
+status
+
+rejection_note
+
+submitted_at
+reviewed_at
+published_at
+
+reviewed_by
+published_by
+
+views
+
+rating_average
+rating_count
+
+meta_title
+meta_description
+
+created_at
+updated_at
+```
+
+## 9.1 Status
+
+```text
+draft
+submitted
+review
+approved
+published
+rejected
+archived
+```
+
+Workflow:
+
+```text
+draft
+  │
+  │ submit
+  ▼
+submitted
+  │
+  │ review
+  ▼
+review
+  │
+  ├──────── reject ────────► rejected
+  │                              │
+  │                              │ edit
+  │                              ▼
+  │                            draft
+  │
+  └──────── approve ───────► approved
+                                │
+                                │ publish
+                                ▼
+                             published
+```
+
+---
+
+# 10. POST_TAG
+
+Relasi many-to-many antara berita dan tag.
+
+```text
+post_id
+tag_id
+```
+
+Primary key:
+
+```text
+PRIMARY KEY(post_id, tag_id)
+```
+
+---
+
+# 11. MEDIA
+
+Media Library.
+
+```text
+id
+uploaded_by
+filename
+original_name
+disk
+path
+mime_type
+size
+width
+height
+alt_text
+caption
+created_at
+updated_at
+```
+
+Contoh:
+
+```text
+storage/app/public/media/2026/08/berita-001.webp
+```
+
+Sebaiknya menggunakan Laravel Storage sehingga storage dapat dipindahkan ke object storage/CDN di masa depan.
+
+---
+
+# 12. POST_MEDIA
+
+Untuk relasi berita dengan banyak gambar.
+
+```text
+post_id
+media_id
+sort_order
+```
+
+Contoh:
+
+```text
+Berita A
+ ├── foto-01
+ ├── foto-02
+ ├── foto-03
+ └── foto-04
+```
+
+---
+
+# 13. RATINGS
+
+```text
+id
+post_id
+rating
+visitor_hash
+session_hash
+created_at
+updated_at
+```
+
+Validasi:
+
+```text
+rating BETWEEN 1 AND 5
+```
+
+Index:
+
+```text
+INDEX(post_id)
+INDEX(visitor_hash)
+```
+
+Untuk mencegah spam dapat digunakan kombinasi:
+
+```text
+visitor_hash
++
+session_hash
++
+rate limiting
+```
+
+---
+
+# 14. CONTACT_MESSAGES
+
+```text
+id
+name
+email
+phone
+subject
+message
+status
+admin_note
+handled_by
+handled_at
+created_at
+updated_at
+```
+
+Status:
+
+```text
+new
+read
+in_progress
+resolved
+archived
+```
+
+Aturan validasi:
+
+```text
+email OR phone harus tersedia
+```
+
+---
+
+# 15. ACTIVITY_LOGS
+
+Digunakan untuk audit trail.
+
+```text
+id
+user_id
+module
+action
+record_id
+description
+ip_hash
+user_agent
+created_at
+```
+
+Contoh:
+
+```text
+User       : Hasan
+Module     : Posts
+Action     : APPROVE
+Record ID  : 125
+Description: Berita disetujui untuk publikasi
+```
+
+---
+
+# 16. SETTINGS
+
+Untuk konfigurasi website tanpa mengubah source code.
+
+```text
+id
+key
+value
+type
+group_name
+created_at
+updated_at
+```
+
+Contoh:
+
+```text
+site_name
+site_description
+site_logo
+site_favicon
+site_email
+site_phone
+site_address
+facebook_url
+instagram_url
+youtube_url
+whatsapp_number
+google_maps_url
+posts_per_page
+```
+
+---
+
+# 17. STRUKTUR FOLDER LARAVEL
+
+Struktur yang direkomendasikan:
+
+```text
+app/
+│
+├── Console/
+│
+├── Exceptions/
+│
+├── Helpers/
+│
+├── Http/
+│   │
+│   ├── Controllers/
+│   │   │
+│   │   ├── Admin/
+│   │   │   ├── DashboardController.php
+│   │   │   ├── UserController.php
+│   │   │   ├── RoleController.php
+│   │   │   ├── MenuController.php
+│   │   │   ├── PageController.php
+│   │   │   ├── PostController.php
+│   │   │   ├── CategoryController.php
+│   │   │   ├── TagController.php
+│   │   │   ├── MediaController.php
+│   │   │   ├── ContactController.php
+│   │   │   ├── RatingController.php
+│   │   │   ├── SettingController.php
+│   │   │   └── ActivityLogController.php
+│   │   │
+│   │   ├── Reporter/
+│   │   │   ├── DashboardController.php
+│   │   │   └── PostController.php
+│   │   │
+│   │   ├── Redaktur/
+│   │   │   ├── DashboardController.php
+│   │   │   └── PostReviewController.php
+│   │   │
+│   │   └── Frontend/
+│   │       ├── HomeController.php
+│   │       ├── PageController.php
+│   │       ├── PostController.php
+│   │       ├── CategoryController.php
+│   │       ├── SearchController.php
+│   │       ├── ContactController.php
+│   │       └── RatingController.php
+│   │
+│   ├── Middleware/
+│   │   ├── Authenticate.php
+│   │   ├── RoleMiddleware.php
+│   │   └── PermissionMiddleware.php
+│   │
+│   └── Requests/
+│       ├── Admin/
+│       ├── Reporter/
+│       ├── Redaktur/
+│       └── Frontend/
+│
+├── Models/
+│   ├── User.php
+│   ├── Role.php
+│   ├── Permission.php
+│   ├── Menu.php
+│   ├── Page.php
+│   ├── Post.php
+│   ├── Category.php
+│   ├── Tag.php
+│   ├── Media.php
+│   ├── Rating.php
+│   ├── ContactMessage.php
+│   ├── ActivityLog.php
+│   └── Setting.php
+│
+├── Policies/
+│   ├── PostPolicy.php
+│   ├── PagePolicy.php
+│   ├── UserPolicy.php
+│   └── MediaPolicy.php
+│
+├── Services/
+│   ├── PostService.php
+│   ├── PageService.php
+│   ├── MenuService.php
+│   ├── MediaService.php
+│   ├── RatingService.php
+│   ├── ContactService.php
+│   ├── SettingService.php
+│   └── ActivityLogService.php
+│
+└── View/
+    └── Components/
+```
+
+---
+
+# 18. STRUKTUR RESOURCES
+
+```text
+resources/
+│
+├── views/
+│   │
+│   ├── layouts/
+│   │   ├── app.blade.php
+│   │   ├── admin.blade.php
+│   │   └── auth.blade.php
+│   │
+│   ├── components/
+│   │   ├── button.blade.php
+│   │   ├── modal.blade.php
+│   │   ├── toast.blade.php
+│   │   ├── loading-bar.blade.php
+│   │   ├── pagination.blade.php
+│   │   └── rating.blade.php
+│   │
+│   ├── frontend/
+│   │   ├── home.blade.php
+│   │   ├── pages/
+│   │   ├── posts/
+│   │   ├── categories/
+│   │   ├── search/
+│   │   └── contact.blade.php
+│   │
+│   ├── admin/
+│   │   ├── dashboard.blade.php
+│   │   ├── users/
+│   │   ├── roles/
+│   │   ├── menus/
+│   │   ├── pages/
+│   │   ├── posts/
+│   │   ├── categories/
+│   │   ├── tags/
+│   │   ├── media/
+│   │   ├── contacts/
+│   │   ├── settings/
+│   │   └── logs/
+│   │
+│   ├── reporter/
+│   │   ├── dashboard.blade.php
+│   │   └── posts/
+│   │
+│   └── redaktur/
+│       ├── dashboard.blade.php
+│       └── posts/
+│
+└── js/
+    ├── app.js
+    ├── ajax.js
+    ├── loading-bar.js
+    ├── notification.js
+    ├── modal.js
+    ├── rating.js
+    ├── media.js
+    └── menu-builder.js
+```
+
+---
+
+# 19. STRUKTUR ROUTES
+
+## 19.1 routes/web.php
+
+Public website:
+
+```text
+/
+ /berita
+ /berita/{slug}
+ /kategori/{slug}
+ /halaman/{slug}
+ /pencarian
+ /kontak
+```
+
+Admin:
+
+```text
+/admin/*
+```
+
+Reporter:
+
+```text
+/reporter/*
+```
+
+Redaktur:
+
+```text
+/redaktur/*
+```
+
+---
+
+# 20. RANCANGAN DASHBOARD ADMIN
+
+Sidebar:
+
+```text
+DASHBOARD
+│
+├── Dashboard
+│
+├── KONTEN
+│   ├── Berita
+│   ├── Kategori
+│   ├── Tag
+│   ├── Halaman
+│   └── Media Library
+│
+├── WEBSITE
+│   ├── Menu
+│   ├── Homepage
+│   └── Pengaturan Website
+│
+├── PENGGUNA
+│   ├── Pengguna
+│   ├── Role
+│   └── Permission
+│
+├── INTERAKSI
+│   ├── Rating
+│   └── Pesan Kontak
+│
+├── MONITORING
+│   ├── Activity Log
+│   └── Statistik
+│
+└── AKUN
+    ├── Profil Saya
+    └── Logout
+```
+
+---
+
+# 21. DASHBOARD ADMIN
+
+Widget:
+
+```text
+┌─────────────────┐ ┌─────────────────┐
+│ Total Berita    │ │ Published       │
+│      125        │ │      105        │
+└─────────────────┘ └─────────────────┘
+
+┌─────────────────┐ ┌─────────────────┐
+│ Review          │ │ Pesan Baru      │
+│       8         │ │       12        │
+└─────────────────┘ └─────────────────┘
+
+┌─────────────────────────────────────┐
+│ Berita Terbaru                      │
+├─────────────────────────────────────┤
+│ Judul 1                    Published│
+│ Judul 2                    Review   │
+│ Judul 3                    Draft    │
+└─────────────────────────────────────┘
+```
+
+---
+
+# 22. DASHBOARD REPORTER
+
+Sidebar:
+
+```text
+DASHBOARD
+│
+├── Dashboard
+│
+├── BERITA
+│   ├── Semua Berita Saya
+│   ├── Draft
+│   ├── Menunggu Review
+│   ├── Ditolak
+│   └── Published
+│
+├── MEDIA
+│   └── Media Library
+│
+└── AKUN
+    ├── Profil Saya
+    └── Logout
+```
+
+Dashboard:
+
+```text
+Total Tulisan
+Draft
+Menunggu Review
+Ditolak
+Published
+```
+
+---
+
+# 23. DASHBOARD REDAKTUR
+
+Sidebar:
+
+```text
+DASHBOARD
+│
+├── Dashboard
+│
+├── EDITORIAL
+│   ├── Menunggu Review
+│   ├── Sedang Direview
+│   ├── Disetujui
+│   ├── Ditolak
+│   └── Published
+│
+├── KONTEN
+│   ├── Semua Berita
+│   ├── Kategori
+│   └── Tag
+│
+├── MEDIA
+│   └── Media Library
+│
+├── INTERAKSI
+│   └── Pesan Kontak
+│
+└── AKUN
+    ├── Profil Saya
+    └── Logout
+```
+
+---
+
+# 24. HALAMAN REVIEW REDAKTUR
+
+Tampilan:
+
+```text
+┌────────────────────────────────────────────┐
+│ REVIEW BERITA                              │
+├────────────────────────────────────────────┤
+│                                            │
+│ Judul Berita                               │
+│                                            │
+│ Penulis: Ahmad                             │
+│ Kategori: Wakaf                            │
+│ Submitted: 31 Agustus 2026                 │
+│                                            │
+│ ────────────────────────────────────────── │
+│                                            │
+│ ISI BERITA                                 │
+│                                            │
+│ ...                                        │
+│                                            │
+├────────────────────────────────────────────┤
+│                                            │
+│ Catatan Redaktur                           │
+│ [........................................] │
+│                                            │
+│ [ KEMBALI ] [ TOLAK ] [ SETUJUI ]         │
+└────────────────────────────────────────────┘
+```
+
+---
+
+# 25. ENDPOINT AJAX / API
+
+Endpoint dibagi berdasarkan modul.
+
+Semua endpoint CMS menggunakan prefix:
+
+```text
+/api/admin/*
+/api/reporter/*
+/api/redaktur/*
+/api/frontend/*
+```
+
+---
+
+# 26. AUTHENTICATION ENDPOINT
+
+| Method | Endpoint           | Fungsi                 |
+| ------ | ------------------ | ---------------------- |
+| POST   | `/login`           | Login                  |
+| POST   | `/logout`          | Logout                 |
+| POST   | `/forgot-password` | Request reset password |
+| POST   | `/reset-password`  | Reset password         |
+
+---
+
+# 27. ADMIN — USER
+
+| Method | Endpoint                               | Fungsi         |
+| ------ | -------------------------------------- | -------------- |
+| GET    | `/api/admin/users`                     | List user      |
+| POST   | `/api/admin/users`                     | Tambah user    |
+| GET    | `/api/admin/users/{id}`                | Detail         |
+| PUT    | `/api/admin/users/{id}`                | Update         |
+| DELETE | `/api/admin/users/{id}`                | Hapus          |
+| PATCH  | `/api/admin/users/{id}/status`         | Aktif/nonaktif |
+| POST   | `/api/admin/users/{id}/reset-password` | Reset password |
+
+---
+
+# 28. ADMIN — ROLE
+
+| Method | Endpoint                            | Fungsi            |
+| ------ | ----------------------------------- | ----------------- |
+| GET    | `/api/admin/roles`                  | List role         |
+| POST   | `/api/admin/roles`                  | Tambah            |
+| PUT    | `/api/admin/roles/{id}`             | Update            |
+| DELETE | `/api/admin/roles/{id}`             | Hapus             |
+| PUT    | `/api/admin/roles/{id}/permissions` | Update permission |
+
+---
+
+# 29. ADMIN — MENU
+
+| Method | Endpoint                       | Fungsi              |
+| ------ | ------------------------------ | ------------------- |
+| GET    | `/api/admin/menus`             | Ambil struktur menu |
+| POST   | `/api/admin/menus`             | Tambah menu         |
+| PUT    | `/api/admin/menus/{id}`        | Edit                |
+| DELETE | `/api/admin/menus/{id}`        | Hapus               |
+| PATCH  | `/api/admin/menus/{id}/status` | Aktif/nonaktif      |
+| PATCH  | `/api/admin/menus/reorder`     | Reorder menu        |
+| PATCH  | `/api/admin/menus/{id}/move`   | Pindah parent       |
+
+`reorder` menerima array ID dan posisi.
+
+Contoh:
+
+```json
+{
+    "items": [
+        {
+            "id": 1,
+            "parent_id": null,
+            "sort_order": 1
+        },
+        {
+            "id": 2,
+            "parent_id": 1,
+            "sort_order": 1
+        }
+    ]
+}
+```
+
+---
+
+# 30. ADMIN — PAGES
+
+| Method | Endpoint                          | Fungsi    |
+| ------ | --------------------------------- | --------- |
+| GET    | `/api/admin/pages`                | List      |
+| POST   | `/api/admin/pages`                | Tambah    |
+| GET    | `/api/admin/pages/{id}`           | Detail    |
+| PUT    | `/api/admin/pages/{id}`           | Update    |
+| DELETE | `/api/admin/pages/{id}`           | Hapus     |
+| PATCH  | `/api/admin/pages/{id}/publish`   | Publish   |
+| PATCH  | `/api/admin/pages/{id}/unpublish` | Unpublish |
+
+---
+
+# 31. POSTS — BERITA
+
+Endpoint utama:
+
+| Method | Endpoint                          | Fungsi      |
+| ------ | --------------------------------- | ----------- |
+| GET    | `/api/admin/posts`                | List berita |
+| POST   | `/api/admin/posts`                | Buat berita |
+| GET    | `/api/admin/posts/{id}`           | Detail      |
+| PUT    | `/api/admin/posts/{id}`           | Update      |
+| DELETE | `/api/admin/posts/{id}`           | Hapus       |
+| PATCH  | `/api/admin/posts/{id}/submit`    | Submit      |
+| PATCH  | `/api/admin/posts/{id}/approve`   | Approve     |
+| PATCH  | `/api/admin/posts/{id}/reject`    | Reject      |
+| PATCH  | `/api/admin/posts/{id}/publish`   | Publish     |
+| PATCH  | `/api/admin/posts/{id}/unpublish` | Unpublish   |
+| PATCH  | `/api/admin/posts/{id}/archive`   | Archive     |
+
+---
+
+# 32. REPORTER — BERITA
+
+| Method | Endpoint                          | Fungsi          |
+| ------ | --------------------------------- | --------------- |
+| GET    | `/api/reporter/posts`             | Berita reporter |
+| POST   | `/api/reporter/posts`             | Buat draft      |
+| GET    | `/api/reporter/posts/{id}`        | Detail          |
+| PUT    | `/api/reporter/posts/{id}`        | Update          |
+| DELETE | `/api/reporter/posts/{id}`        | Hapus draft     |
+| PATCH  | `/api/reporter/posts/{id}/submit` | Kirim review    |
+
+Reporter **tidak mempunyai endpoint approve/publish**.
+
+---
+
+# 33. REDAKTUR — BERITA
+
+| Method | Endpoint                                | Fungsi                 |
+| ------ | --------------------------------------- | ---------------------- |
+| GET    | `/api/redaktur/posts`                   | Semua berita           |
+| GET    | `/api/redaktur/posts/review`            | Berita menunggu review |
+| GET    | `/api/redaktur/posts/{id}`              | Detail                 |
+| PATCH  | `/api/redaktur/posts/{id}/start-review` | Mulai review           |
+| PATCH  | `/api/redaktur/posts/{id}/approve`      | Approve                |
+| PATCH  | `/api/redaktur/posts/{id}/reject`       | Reject                 |
+| PATCH  | `/api/redaktur/posts/{id}/publish`      | Publish                |
+| PATCH  | `/api/redaktur/posts/{id}/unpublish`    | Unpublish              |
+
+---
+
+# 34. CATEGORY
+
+| Method | Endpoint                            | Fungsi |
+| ------ | ----------------------------------- | ------ |
+| GET    | `/api/admin/categories`             | List   |
+| POST   | `/api/admin/categories`             | Tambah |
+| PUT    | `/api/admin/categories/{id}`        | Update |
+| DELETE | `/api/admin/categories/{id}`        | Hapus  |
+| PATCH  | `/api/admin/categories/{id}/status` | Status |
+
+---
+
+# 35. TAG
+
+| Method | Endpoint               | Fungsi |
+| ------ | ---------------------- | ------ |
+| GET    | `/api/admin/tags`      | List   |
+| POST   | `/api/admin/tags`      | Tambah |
+| PUT    | `/api/admin/tags/{id}` | Update |
+| DELETE | `/api/admin/tags/{id}` | Hapus  |
+
+---
+
+# 36. MEDIA LIBRARY
+
+| Method | Endpoint                | Fungsi          |
+| ------ | ----------------------- | --------------- |
+| GET    | `/api/admin/media`      | List media      |
+| POST   | `/api/admin/media`      | Upload          |
+| GET    | `/api/admin/media/{id}` | Detail          |
+| PUT    | `/api/admin/media/{id}` | Update metadata |
+| DELETE | `/api/admin/media/{id}` | Hapus           |
+
+Upload menggunakan:
+
+```text
+multipart/form-data
+```
+
+Validasi:
+
+```text
+MIME type
+Maximum size
+Image dimension
+File extension
+```
+
+---
+
+# 37. RATING
+
+Public endpoint:
+
+| Method | Endpoint                          | Fungsi           |
+| ------ | --------------------------------- | ---------------- |
+| GET    | `/api/frontend/posts/{id}/rating` | Statistik rating |
+| POST   | `/api/frontend/posts/{id}/rating` | Submit rating    |
+
+Request:
+
+```json
+{
+    "rating": 5
+}
+```
+
+Response:
+
+```json
+{
+    "success": true,
+    "message": "Terima kasih atas penilaian Anda.",
+    "data": {
+        "average": 4.8,
+        "count": 126
+    }
+}
+```
+
+---
+
+# 38. CONTACT
+
+Public:
+
+| Method | Endpoint                | Fungsi      |
+| ------ | ----------------------- | ----------- |
+| POST   | `/api/frontend/contact` | Kirim pesan |
+
+Admin:
+
+| Method | Endpoint                                  | Fungsi        |
+| ------ | ----------------------------------------- | ------------- |
+| GET    | `/api/admin/contact-messages`             | List          |
+| GET    | `/api/admin/contact-messages/{id}`        | Detail        |
+| PATCH  | `/api/admin/contact-messages/{id}/status` | Update status |
+| DELETE | `/api/admin/contact-messages/{id}`        | Hapus         |
+
+---
+
+# 39. SEARCH
+
+| Method | Endpoint                           | Fungsi    |
+| ------ | ---------------------------------- | --------- |
+| GET    | `/api/frontend/search?q={keyword}` | Pencarian |
+
+Pencarian meliputi:
+
+```text
+posts.title
+posts.excerpt
+posts.content
+categories.name
+tags.name
+pages.title
+pages.content
+```
+
+Untuk skala data besar, pencarian dapat dikembangkan menggunakan full-text index atau search engine.
+
+---
+
+# 40. DASHBOARD STATISTICS
+
+Admin:
+
+```text
+GET /api/admin/dashboard/statistics
+```
+
+Response:
+
+```json
+{
+    "posts": {
+        "total": 125,
+        "draft": 5,
+        "review": 8,
+        "published": 105
+    },
+    "users": 12,
+    "contact_messages": 15,
+    "ratings": 1245
+}
+```
+
+Reporter:
+
+```text
+GET /api/reporter/dashboard/statistics
+```
+
+Redaktur:
+
+```text
+GET /api/redaktur/dashboard/statistics
+```
+
+---
+
+# 41. AJAX STANDARD
+
+Seluruh request AJAX menggunakan format response standar.
+
+### Success
+
+```json
+{
+    "success": true,
+    "message": "Data berhasil disimpan.",
+    "data": {}
+}
+```
+
+### Validation Error
+
+```json
+{
+    "success": false,
+    "message": "Data tidak valid.",
+    "errors": {
+        "title": [
+            "Judul wajib diisi."
+        ]
+    }
+}
+```
+
+### Server Error
+
+```json
+{
+    "success": false,
+    "message": "Terjadi kesalahan pada server."
+}
+```
+
+---
+
+# 42. GLOBAL AJAX LOADING
+
+Semua request AJAX memanggil:
+
+```text
+ajaxStart
+    ↓
+showLoadingBar()
+    ↓
+request
+    ↓
+ajaxComplete
+    ↓
+hideLoadingBar()
+```
+
+Frontend JavaScript sebaiknya mempunyai satu wrapper AJAX sehingga developer tidak perlu mengulang kode loading pada setiap modul.
+
+Konsep:
+
+```text
+apiRequest()
+    │
+    ├── showLoadingBar()
+    ├── disable submit button
+    ├── fetch()
+    ├── handle response
+    ├── show notification
+    ├── enable button
+    └── hideLoadingBar()
+```
+
+---
+
+# 43. CONTOH FLOW SIMPAN BERITA
+
+```text
+Reporter
+   │
+   ▼
+Klik "Simpan Draft"
+   │
+   ▼
+JavaScript
+   │
+   ├── disable button
+   ├── show loading bar
+   │
+   ▼
+POST /api/reporter/posts
+   │
+   ▼
+Laravel
+   │
+   ├── Authentication
+   ├── Permission
+   ├── Validation
+   ├── PostService
+   └── Database
+   │
+   ▼
+JSON Response
+   │
+   ├── success
+   │      ↓
+   │   Toast Success
+   │
+   └── error
+          ↓
+      Toast/Error Validation
+   │
+   ▼
+hide loading bar
+enable button
+```
+
+---
+
+# 44. CONTOH FLOW APPROVE BERITA
+
+```text
+Redaktur
+   │
+   ▼
+Klik "Approve"
+   │
+   ▼
+Confirmation Modal
+   │
+   ▼
+POST/PATCH AJAX
+   │
+   ▼
+Authorization
+   │
+   ▼
+PostService
+   │
+   ▼
+status = approved
+reviewed_by = current_user
+reviewed_at = now()
+   │
+   ▼
+Activity Log
+   │
+   ▼
+JSON Response
+   │
+   ▼
+Refresh Data Table
+```
+
+---
+
+# 45. CONTROLLER VS SERVICE
+
+Controller dibuat tipis.
+
+Contoh konsep:
+
+```text
+PostController
+      │
+      ▼
+PostService
+      │
+      ├── create()
+      ├── update()
+      ├── submit()
+      ├── approve()
+      ├── reject()
+      ├── publish()
+      └── unpublish()
+```
+
+Jangan menempatkan seluruh business logic pada Controller.
+
+---
+
+# 46. POLICY DAN AUTHORIZATION
+
+Untuk operasi yang berkaitan dengan data, gunakan Laravel Policy.
+
+Contoh:
+
+```text
+PostPolicy
+
+view()
+create()
+update()
+delete()
+submit()
+review()
+approve()
+reject()
+publish()
+unpublish()
+```
+
+Contoh aturan:
+
+```text
+Reporter:
+update → hanya berita miliknya
+delete  → hanya draft miliknya
+submit  → hanya berita miliknya
+
+Redaktur:
+review → semua berita yang masuk
+approve → berita yang sedang direview
+publish → berita approved
+
+Admin:
+semua akses
+```
+
+---
+
+# 47. DATABASE INDEXING
+
+Index penting:
+
+```text
+users.username
+users.email
+users.status
+
+posts.slug
+posts.status
+posts.published_at
+posts.author_id
+posts.category_id
+
+categories.slug
+tags.slug
+
+pages.slug
+pages.status
+
+ratings.post_id
+ratings.visitor_hash
+
+contact_messages.status
+contact_messages.created_at
+
+activity_logs.user_id
+activity_logs.module
+activity_logs.created_at
+```
+
+Composite index yang direkomendasikan:
+
+```text
+posts(status, published_at)
+posts(category_id, status, published_at)
+ratings(post_id, visitor_hash)
+```
+
+---
+
+# 48. SOFT DELETE
+
+Untuk data tertentu sebaiknya menggunakan `SoftDeletes`.
+
+Direkomendasikan untuk:
+
+```text
+users
+posts
+pages
+media
+categories
+tags
+contact_messages
+```
+
+Dengan demikian data tidak langsung hilang secara permanen.
+
+Contoh:
+
+```text
+deleted_at
+```
+
+---
+
+# 49. FUTURE-PROOFING
+
+Database sebaiknya tidak dibuat terlalu spesifik untuk kebutuhan website berita saja.
+
+Tahap berikutnya dapat menambahkan:
+
+```text
+waqf_assets
+waqf_donors
+waqf_managers
+land_assets
+land_documents
+certificates
+locations
+organizations
+```
+
+Struktur tersebut dapat diintegrasikan dengan:
+
+```text
+users
+media
+activity_logs
+```
+
+sehingga CMS dapat berkembang menjadi:
+
+**LWP Digital Management System**
+
+---
+
+# 50. REKOMENDASI TEKNOLOGI FRONTEND
+
+Untuk mempertahankan konsep Laravel + Tailwind tetapi tetap ringan:
+
+```text
+Blade
++
+Tailwind CSS
++
+Alpine.js
++
+Fetch API
+```
+
+Alpine.js dapat digunakan untuk:
+
+* Modal.
+* Dropdown.
+* Sidebar.
+* Toast.
+* Tabs.
+* Loading state.
+* Form interaction.
+
+Sedangkan AJAX utama menggunakan:
+
+```text
+Fetch API
+```
+
+Dengan demikian tidak diperlukan SPA framework seperti React/Vue untuk MVP.
+
+---
+
+# 51. REKOMENDASI EDITOR BERITA
+
+Editor berita sebaiknya menggunakan rich text editor yang mendukung:
+
+```text
+Heading
+Bold
+Italic
+Link
+Image
+Table
+Quote
+List
+Alignment
+Embed
+```
+
+Editor harus dapat mengembalikan HTML yang sudah disanitasi.
+
+**Penting:** HTML dari editor tidak boleh langsung dianggap trusted input. Sanitasi harus dilakukan sebelum disimpan/ditampilkan.
+
+---
+
+# 52. STRUKTUR DEPLOYMENT
+
+Produksi:
+
+```text
+Internet
+   │
+   ▼
+Nginx / Apache
+   │
+   ▼
+PHP-FPM
+   │
+   ▼
+Laravel
+   │
+   ├── MySQL
+   ├── Storage
+   ├── Cache
+   └── Queue
+```
+
+Untuk tahap awal:
+
+```text
+Laravel
+MySQL
+Local Storage
+Cron
+```
+
+sudah cukup.
+
+Untuk tahap pengembangan:
+
+```text
+Redis
+Queue Worker
+Object Storage
+CDN
+```
+
+dapat ditambahkan.
+
+---
+
+# 53. PRIORITAS IMPLEMENTASI
+
+## Sprint 1 — Foundation
+
+```text
+Laravel
+Authentication
+User
+Role
+Permission
+Layout
+Tailwind
+AJAX Core
+Loading Bar
+Toast
+```
+
+## Sprint 2 — CMS
+
+```text
+Menu
+Pages
+Media
+Settings
+```
+
+## Sprint 3 — News
+
+```text
+Posts
+Categories
+Tags
+Rich Text Editor
+Media Gallery
+```
+
+## Sprint 4 — Editorial
+
+```text
+Reporter
+Redaktur
+Workflow
+Approve
+Reject
+Publish
+```
+
+## Sprint 5 — Public Website
+
+```text
+Homepage
+News
+Search
+Profile
+Contact
+Rating
+```
+
+## Sprint 6 — Security & Optimization
+
+```text
+Activity Log
+Rate Limiting
+SEO
+Caching
+Image Optimization
+Backup
+Performance Test
+Security Test
+```
+
+---
+
+# 54. URUTAN PEMBANGUNAN DATABASE MIGRATION
+
+Urutan migration Laravel yang disarankan:
+
+```text
+1. users
+2. roles
+3. permissions
+4. role_user
+5. permission_role
+6. media
+7. categories
+8. tags
+9. pages
+10. menus
+11. posts
+12. post_tag
+13. post_media
+14. ratings
+15. contact_messages
+16. activity_logs
+17. settings
+```
+
+Kemudian:
+
+```text
+Database Seeder
+       ↓
+Role Seeder
+       ↓
+Permission Seeder
+       ↓
+Admin User Seeder
+       ↓
+Category Seeder
+       ↓
+Setting Seeder
+```
+
+---
+
+# 55. HASIL AKHIR ARSITEKTUR
+
+Secara keseluruhan sistem menjadi:
+
+```text
+                         LWP PWNU WEBSITE
+                                │
+              ┌─────────────────┴─────────────────┐
+              │                                   │
+        PUBLIC WEBSITE                       CMS BACKEND
+              │                                   │
+       ┌──────┼──────┐                 ┌──────────┼──────────┐
+       │      │      │                 │          │          │
+     Page   News   Contact           ADMIN    REPORTER   REDAKTUR
+       │      │      │                 │          │          │
+       │    Rating  Message            │        Posts       Review
+       │      │      │                 │          │          │
+       └──────┴──────┴─────────────────┴──────────┴──────────┘
+                                │
+                                ▼
+                         LARAVEL SERVICES
+                                │
+                                ▼
+                            ELOQUENT ORM
+                                │
+                                ▼
+                              MYSQL
+```
+
+Arsitektur ini membuat **website publik dan CMS berada dalam satu aplikasi Laravel**, tetapi hak akses dan tanggung jawab setiap pengguna tetap terpisah dengan jelas.
+
+Struktur ini juga sengaja dibuat **tidak terlalu kompleks untuk MVP**, namun memiliki fondasi yang cukup kuat untuk dikembangkan menjadi sistem pengelolaan **data wakaf, pertanahan, aset, dokumen, GIS, dan nazhir** pada fase berikutnya.

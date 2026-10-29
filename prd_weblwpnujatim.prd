@@ -1,0 +1,1683 @@
+# PRODUCT REQUIREMENTS DOCUMENT (PRD)
+
+## WEBSITE LEMBAGA WAKAF DAN PERTANAHAN (LWP)
+
+### PENGURUS WILAYAH NAHDLATUL ULAMA
+
+**Versi:** 1.0
+**Tanggal:** 31 Agustus 2026
+**Status:** Draft Pengembangan
+
+---
+
+# 1. INFORMASI PRODUK
+
+## 1.1 Nama Produk
+
+**Website Lembaga Wakaf dan Pertanahan (LWP) Pengurus Wilayah Nahdlatul Ulama**
+
+Nama/domain website dapat disesuaikan dengan kebijakan Pengurus Wilayah Nahdlatul Ulama.
+
+## 1.2 Jenis Produk
+
+Website organisasi berbasis **Content Management System (CMS)** yang memungkinkan pengelola LWP PWNU mengelola informasi, berita, halaman profil organisasi, struktur organisasi, kontak, serta interaksi dengan pengunjung.
+
+Konsep pengelolaan konten dibuat menyerupai CMS populer seperti WordPress, tetapi dikembangkan secara khusus menggunakan framework Laravel.
+
+## 1.3 Teknologi
+
+| Komponen       | Teknologi                                               |
+| -------------- | ------------------------------------------------------- |
+| Backend        | Laravel                                                 |
+| Frontend       | Blade + Tailwind CSS                                    |
+| Database       | MySQL                                                   |
+| Interaksi      | AJAX / Fetch API                                        |
+| Authentication | Laravel Authentication                                  |
+| Authorization  | Role & Permission                                       |
+| Editor Konten  | Rich Text Editor                                        |
+| Media          | Image/File Manager                                      |
+| Web Server     | Apache/Nginx                                            |
+| PHP            | PHP versi yang kompatibel dengan Laravel yang digunakan |
+| Database       | MySQL/MariaDB                                           |
+| Responsive     | Desktop, Tablet, Mobile                                 |
+
+---
+
+# 2. LATAR BELAKANG
+
+Lembaga Wakaf dan Pertanahan (LWP) merupakan salah satu lembaga strategis dalam lingkungan Nahdlatul Ulama yang memiliki peran dalam pengelolaan, pendataan, pengamanan, pengembangan, dan pemberdayaan aset wakaf serta pertanahan.
+
+Diperlukan sebuah website resmi yang menjadi pusat informasi digital LWP PWNU sehingga informasi organisasi dapat disampaikan secara cepat, terstruktur, mudah diakses, dan dapat dikelola secara mandiri oleh pengurus.
+
+Website juga diharapkan menjadi media komunikasi dua arah antara organisasi dengan masyarakat melalui penyediaan informasi, berita, serta kanal saran dan pertanyaan.
+
+---
+
+# 3. TUJUAN PRODUK
+
+Website dikembangkan dengan tujuan:
+
+1. Menyediakan portal informasi resmi LWP PWNU.
+2. Menyediakan informasi profil dan sejarah organisasi.
+3. Menampilkan struktur organisasi LWP.
+4. Menyediakan publikasi berita dan kegiatan LWP.
+5. Memudahkan pengurus mengelola konten tanpa harus melakukan perubahan kode program.
+6. Menyediakan sistem manajemen pengguna berdasarkan hak akses.
+7. Menyediakan mekanisme editorial berita melalui reporter dan redaktur.
+8. Memungkinkan pengunjung memberikan rating terhadap berita.
+9. Menyediakan kanal komunikasi melalui halaman "Kontak Kami".
+10. Menyediakan CMS yang mudah digunakan seperti WordPress.
+11. Memastikan seluruh proses interaksi berlangsung secara asynchronous menggunakan AJAX.
+12. Memberikan feedback kepada pengguna melalui loading bar, notifikasi sukses, dan notifikasi error.
+
+---
+
+# 4. TARGET PENGGUNA
+
+Website memiliki dua kelompok pengguna utama.
+
+## 4.1 Pengunjung
+
+Pengunjung adalah masyarakat umum, warga Nahdlatul Ulama, akademisi, pengurus organisasi, wakif, nadzir, maupun pihak lain yang membutuhkan informasi mengenai LWP.
+
+Pengunjung dapat:
+
+* Melihat halaman website.
+* Membaca berita.
+* Melihat gambar berita.
+* Memberikan rating berita.
+* Melihat profil organisasi.
+* Melihat struktur organisasi.
+* Melihat sejarah organisasi.
+* Mengirimkan pertanyaan/saran melalui halaman kontak.
+
+## 4.2 Pengelola Website
+
+Pengelola website terdiri dari:
+
+### Administrator
+
+Memiliki hak akses tertinggi untuk mengelola website.
+
+### Reporter
+
+Bertugas membuat dan mengelola berita.
+
+### Redaktur
+
+Bertugas melakukan pemeriksaan dan persetujuan berita sebelum dipublikasikan.
+
+---
+
+# 5. ROLE DAN HAK AKSES
+
+| Fitur                  | Admin | Reporter | Redaktur |
+| ---------------------- | ----- | -------- | -------- |
+| Login                  | ✓     | ✓        | ✓        |
+| Dashboard              | ✓     | ✓        | ✓        |
+| Kelola menu            | ✓     | -        | -        |
+| Kelola pengguna        | ✓     | -        | -        |
+| Kelola halaman statis  | ✓     | -        | -        |
+| Kelola kategori berita | ✓     | -        | ✓*       |
+| Membuat berita         | ✓     | ✓        | ✓        |
+| Edit berita sendiri    | ✓     | ✓        | ✓        |
+| Edit semua berita      | ✓     | -        | ✓        |
+| Submit berita          | ✓     | ✓        | ✓        |
+| Review berita          | ✓     | -        | ✓        |
+| Approve berita         | ✓     | -        | ✓        |
+| Publish berita         | ✓     | -        | ✓        |
+| Unpublish berita       | ✓     | -        | ✓        |
+| Kelola media           | ✓     | ✓        | ✓        |
+| Melihat rating         | ✓     | ✓        | ✓        |
+| Melihat pesan kontak   | ✓     | -        | ✓        |
+| Hapus pesan kontak     | ✓     | -        | ✓        |
+| Pengaturan website     | ✓     | -        | -        |
+
+`*` Dapat disesuaikan pada implementasi akhir.
+
+---
+
+# 6. STATUS BERITA
+
+Setiap berita memiliki workflow editorial.
+
+```text
+DRAFT
+  ↓
+SUBMITTED
+  ↓
+REVIEW
+  ↓
+APPROVED
+  ↓
+PUBLISHED
+```
+
+Status tambahan:
+
+```text
+REJECTED
+ARCHIVED
+```
+
+## 6.1 Draft
+
+Berita masih dalam proses penulisan dan belum dikirim kepada redaktur.
+
+## 6.2 Submitted
+
+Reporter telah menyelesaikan berita dan mengirimkannya kepada redaktur.
+
+## 6.3 Review
+
+Berita sedang diperiksa oleh redaktur.
+
+## 6.4 Approved
+
+Berita telah disetujui.
+
+## 6.5 Published
+
+Berita telah ditampilkan kepada publik.
+
+## 6.6 Rejected
+
+Berita ditolak dan dikembalikan kepada reporter untuk diperbaiki.
+
+## 6.7 Archived
+
+Berita tidak lagi menjadi berita aktif tetapi tetap tersimpan dalam database.
+
+---
+
+# 7. STRUKTUR WEBSITE
+
+Struktur awal website:
+
+```text
+HOME
+│
+├── PROFIL
+│   ├── Tentang LWP
+│   ├── Sejarah
+│   ├── Visi & Misi
+│   └── Struktur Organisasi
+│
+├── BERITA
+│   ├── Berita
+│   ├── Kategori
+│   └── Detail Berita
+│
+├── WAKAF
+│
+├── PERTANAHAN
+│
+├── PROGRAM
+│
+├── GALERI
+│
+├── KONTAK KAMI
+│
+└── MENU DINAMIS LAINNYA
+```
+
+Struktur menu harus bersifat **dinamis** sehingga administrator dapat menambahkan, mengubah, menghapus, dan mengatur urutan menu melalui dashboard.
+
+---
+
+# 8. DASHBOARD ADMIN
+
+Dashboard merupakan pusat pengelolaan website.
+
+## 8.1 Dashboard Utama
+
+Menampilkan informasi ringkas:
+
+* Jumlah berita.
+* Berita draft.
+* Berita menunggu review.
+* Berita published.
+* Jumlah pengguna.
+* Jumlah pesan masuk.
+* Jumlah rating.
+* Berita terbaru.
+* Pesan kontak terbaru.
+
+Contoh:
+
+```text
++----------------+----------------+----------------+
+| Total Berita   | Menunggu Review| Published      |
+|     125        |       8        |      105       |
++----------------+----------------+----------------+
+
++----------------+----------------+----------------+
+| Pengguna       | Pesan Masuk    | Rating         |
+|      12        |       15       |      1.245     |
++----------------+----------------+----------------+
+```
+
+---
+
+# 9. MANAJEMEN MENU
+
+Administrator dapat membuat struktur navigasi website secara dinamis.
+
+## 9.1 Data Menu
+
+Setiap menu minimal memiliki:
+
+* ID
+* Nama menu
+* URL
+* Parent menu
+* Jenis menu
+* Target
+* Icon
+* Urutan
+* Status aktif
+* Created at
+* Updated at
+
+## 9.2 Jenis Menu
+
+Menu dapat berupa:
+
+1. Link halaman internal.
+2. Link berita.
+3. Link kategori berita.
+4. Link eksternal.
+5. Dropdown/submenu.
+6. Custom URL.
+
+## 9.3 Fitur
+
+Administrator dapat:
+
+* Tambah menu.
+* Edit menu.
+* Hapus menu.
+* Mengubah urutan menu.
+* Membuat submenu.
+* Menentukan parent menu.
+* Mengaktifkan/nonaktifkan menu.
+
+Contoh:
+
+```text
+Profil
+ ├── Tentang LWP
+ ├── Sejarah
+ ├── Visi & Misi
+ └── Struktur Organisasi
+
+Berita
+ ├── Berita Organisasi
+ ├── Wakaf
+ └── Pertanahan
+```
+
+---
+
+# 10. MANAJEMEN HALAMAN STATIS
+
+Administrator dapat membuat halaman statis seperti CMS WordPress.
+
+Contoh halaman:
+
+* Tentang LWP.
+* Profil.
+* Sejarah.
+* Visi dan Misi.
+* Struktur Organisasi.
+* Program Kerja.
+* Kontak.
+* Halaman informasi lainnya.
+
+## 10.1 Field Halaman
+
+Minimal:
+
+* Judul.
+* Slug.
+* Konten.
+* Featured Image.
+* Status.
+* Meta title.
+* Meta description.
+* Published at.
+* Created by.
+* Updated by.
+
+## 10.2 Status
+
+```text
+Draft
+Published
+Archived
+```
+
+---
+
+# 11. MANAJEMEN BERITA
+
+Modul berita merupakan salah satu modul utama website.
+
+## 11.1 Field Berita
+
+Setiap berita minimal mempunyai:
+
+* ID.
+* Judul.
+* Slug.
+* Ringkasan.
+* Isi berita.
+* Featured image.
+* Galeri gambar.
+* Kategori.
+* Tag.
+* Penulis.
+* Status.
+* Published date.
+* Created date.
+* Updated date.
+* Jumlah kunjungan.
+* Rating.
+* Meta title.
+* Meta description.
+
+## 11.2 Penulisan Berita
+
+Reporter dapat membuat berita menggunakan editor rich text.
+
+Editor mendukung:
+
+* Bold.
+* Italic.
+* Underline.
+* Heading.
+* Paragraph.
+* Numbering.
+* Bullet list.
+* Blockquote.
+* Hyperlink.
+* Image.
+* Video embed.
+* Table.
+* Alignment.
+* Caption gambar.
+
+## 11.3 Gambar Berita
+
+Reporter dapat:
+
+* Upload gambar.
+* Memilih gambar dari media library.
+* Menentukan featured image.
+* Menambahkan beberapa gambar dalam isi berita.
+* Menambahkan caption.
+
+Sistem sebaiknya melakukan:
+
+* Validasi format.
+* Validasi ukuran.
+* Resize gambar.
+* Kompresi gambar.
+* Pembuatan thumbnail.
+
+Format yang disarankan:
+
+```text
+JPG
+JPEG
+PNG
+WEBP
+```
+
+---
+
+# 12. KATEGORI DAN TAG BERITA
+
+Administrator dapat mengelola kategori berita.
+
+Contoh:
+
+```text
+Organisasi
+Wakaf
+Pertanahan
+Kegiatan
+Regulasi
+Opini
+Pengumuman
+Tokoh
+```
+
+Berita dapat memiliki:
+
+* 1 kategori utama.
+* Beberapa tag.
+
+Contoh:
+
+```text
+Kategori:
+Wakaf
+
+Tag:
+wakaf produktif
+nahdlatul ulama
+LWP
+PWNU
+aset wakaf
+```
+
+---
+
+# 13. FITUR RATING BERITA
+
+Pengunjung dapat memberikan rating terhadap setiap berita.
+
+Sistem menggunakan rating:
+
+```text
+★ ★ ★ ★ ★
+```
+
+Skala:
+
+```text
+1 = Sangat Tidak Menarik
+2 = Tidak Menarik
+3 = Cukup
+4 = Menarik
+5 = Sangat Menarik
+```
+
+## 13.1 Perhitungan
+
+Sistem menyimpan:
+
+* Nilai rating.
+* Waktu rating.
+* Identifikasi anonim pengunjung.
+
+Nilai rata-rata:
+
+```text
+Average Rating =
+Total Nilai Rating / Jumlah Rating
+```
+
+Contoh:
+
+```text
+Rating: ★ 4.7
+Berdasarkan 125 penilaian
+```
+
+## 13.2 Pencegahan Spam
+
+Sistem perlu menerapkan mekanisme agar satu pengunjung tidak dapat melakukan rating berulang kali secara tidak wajar.
+
+Pendekatan yang dapat digunakan:
+
+* Cookie.
+* Session.
+* Hash IP.
+* kombinasi IP + User Agent.
+* Rate limiting.
+
+Tidak disarankan menyimpan IP address dalam bentuk plaintext tanpa kebutuhan yang jelas.
+
+---
+
+# 14. HALAMAN DETAIL BERITA
+
+Halaman detail berita minimal menampilkan:
+
+```text
+Judul Berita
+
+Kategori | Tanggal | Penulis
+
+Featured Image
+
+Isi Berita
+
+Rating
+★★★★★
+4.8 / 5
+
+Berita Terkait
+```
+
+Fitur tambahan:
+
+* Share ke WhatsApp.
+* Share ke Facebook.
+* Share ke X.
+* Copy link.
+* Berita sebelumnya.
+* Berita berikutnya.
+* Berita terkait.
+
+---
+
+# 15. MANAJEMEN PENGGUNA
+
+Administrator dapat mengelola seluruh akun pengguna.
+
+## 15.1 Data Pengguna
+
+Minimal:
+
+* Nama.
+* Username.
+* Email.
+* Nomor HP.
+* Password.
+* Foto.
+* Role.
+* Status.
+* Last login.
+* Created at.
+* Updated at.
+
+## 15.2 Fitur
+
+Admin dapat:
+
+* Tambah pengguna.
+* Edit pengguna.
+* Reset password.
+* Aktif/nonaktif pengguna.
+* Hapus pengguna.
+* Mengubah role.
+* Melihat aktivitas pengguna.
+
+---
+
+# 16. AUTHENTICATION
+
+Sistem menyediakan:
+
+* Login.
+* Logout.
+* Forgot password.
+* Reset password.
+* Remember me.
+* Session management.
+
+Password harus disimpan menggunakan mekanisme hashing yang aman, misalnya hashing bawaan Laravel.
+
+---
+
+# 17. MANAJEMEN MEDIA
+
+Media Library digunakan untuk menyimpan file yang digunakan pada website.
+
+Jenis media:
+
+```text
+Images
+Documents
+PDF
+Video/Media embed
+```
+
+Fitur:
+
+* Upload.
+* Preview.
+* Search.
+* Filter.
+* Delete.
+* Rename.
+* Informasi ukuran file.
+* Informasi dimensi gambar.
+* Copy URL.
+
+Media dapat digunakan kembali oleh beberapa halaman/berita.
+
+---
+
+# 18. KONTAK KAMI
+
+Website menyediakan halaman:
+
+**Kontak Kami**
+
+Pengunjung dapat mengirimkan:
+
+* Saran.
+* Pertanyaan.
+* Kritik.
+* Informasi.
+* Permintaan informasi.
+* Pesan lainnya.
+
+## 18.1 Form
+
+Field:
+
+```text
+Nama *
+Email
+Nomor HP
+Subjek *
+Pesan *
+Captcha/anti-spam
+```
+
+Email atau nomor HP minimal salah satunya harus diisi.
+
+Validasi:
+
+```text
+Nama       : wajib
+Email      : optional, tetapi harus valid jika diisi
+Nomor HP   : optional
+Subjek     : wajib
+Pesan      : wajib
+```
+
+## 18.2 Setelah Submit
+
+Sistem melakukan:
+
+```text
+Submit
+   ↓
+AJAX Request
+   ↓
+Loading Bar
+   ↓
+Validasi
+   ↓
+Simpan Database
+   ↓
+Success Notification
+```
+
+Pesan:
+
+> Terima kasih. Pesan Anda telah berhasil dikirim dan akan segera ditindaklanjuti.
+
+---
+
+# 19. MANAJEMEN PESAN KONTAK
+
+Admin dan redaktur dapat melihat pesan masuk.
+
+Tampilan:
+
+| Nama  | Subjek           | Kontak | Status | Tanggal    |
+| ----- | ---------------- | ------ | ------ | ---------- |
+| Ahmad | Pertanyaan Wakaf | Email  | Baru   | 31/08/2026 |
+| Budi  | Informasi Tanah  | HP     | Dibaca | 31/08/2026 |
+
+Status:
+
+```text
+NEW
+READ
+IN_PROGRESS
+RESOLVED
+ARCHIVED
+```
+
+Admin dapat:
+
+* Membaca pesan.
+* Mengubah status.
+* Memberikan catatan internal.
+* Menghapus/arsip pesan.
+
+---
+
+# 20. AJAX / ASYNCHRONOUS INTERACTION
+
+Semua interaksi dashboard dan form yang memungkinkan harus menggunakan AJAX.
+
+Contoh:
+
+```text
+Tambah Menu
+Edit Menu
+Hapus Menu
+Publish Berita
+Approve Berita
+Upload Image
+Delete Image
+Update User
+Update Status
+Submit Kontak
+Rating Berita
+```
+
+Tidak menggunakan reload halaman penuh jika proses dapat dilakukan secara asynchronous.
+
+---
+
+# 21. GLOBAL LOADING BAR
+
+Setiap AJAX request harus menampilkan loading indicator global.
+
+Contoh:
+
+```text
+┌───────────────────────────────────────────────┐
+│███████████████████████                       │
+└───────────────────────────────────────────────┘
+```
+
+Loading bar berada pada bagian paling atas halaman.
+
+Behavior:
+
+```text
+AJAX START
+   ↓
+Loading bar muncul
+   ↓
+Request berjalan
+   ↓
+Loading bar bergerak
+   ↓
+Request selesai
+   ↓
+Loading bar selesai
+   ↓
+Loading bar menghilang
+```
+
+Untuk proses yang membutuhkan waktu lebih lama, dapat ditambahkan spinner pada tombol.
+
+Contoh:
+
+```text
+[Simpan]
+   ↓
+[⟳ Menyimpan...]
+```
+
+Tombol harus dinonaktifkan selama request berlangsung untuk mencegah double submit.
+
+---
+
+# 22. NOTIFICATION SYSTEM
+
+Sistem menggunakan notification berbasis Toast/Alert.
+
+### Success
+
+```text
+✓ Data berhasil disimpan.
+```
+
+### Error
+
+```text
+✕ Terjadi kesalahan. Silakan coba kembali.
+```
+
+### Warning
+
+```text
+⚠ Data belum lengkap.
+```
+
+### Confirmation
+
+Untuk proses destruktif:
+
+```text
+Apakah Anda yakin ingin menghapus data ini?
+
+[Batal] [Ya, Hapus]
+```
+
+---
+
+# 23. SEARCH
+
+Website menyediakan pencarian.
+
+Pengunjung dapat mencari:
+
+* Berita.
+* Halaman.
+* Kategori.
+
+Contoh:
+
+```text
+[ Cari berita atau informasi... ] 🔍
+```
+
+Hasil pencarian menampilkan:
+
+* Judul.
+* Ringkasan.
+* Thumbnail.
+* Tanggal.
+* Kategori.
+
+---
+
+# 24. HOMEPAGE
+
+Homepage minimal memiliki komponen:
+
+```text
+HEADER
+│
+├── Logo LWP
+├── Menu
+└── Search
+
+HERO / BANNER
+
+BERITA TERBARU
+
+BERITA UNGGULAN
+
+TENTANG LWP
+
+PROGRAM / INFORMASI
+
+BERITA POPULER
+
+GALERI
+
+KONTAK / CTA
+
+FOOTER
+```
+
+Homepage harus dapat dikembangkan sehingga beberapa bagian konten dapat dikelola melalui CMS.
+
+---
+
+# 25. BERITA TERBARU
+
+Menampilkan berita terbaru berdasarkan:
+
+```text
+published_at DESC
+```
+
+Contoh:
+
+```text
+Berita Terbaru
+
+[Foto]
+Judul Berita 1
+31 Agustus 2026
+
+[Foto]
+Judul Berita 2
+30 Agustus 2026
+
+[Foto]
+Judul Berita 3
+29 Agustus 2026
+```
+
+---
+
+# 26. BERITA POPULER
+
+Berita populer dapat dihitung berdasarkan:
+
+* Jumlah views.
+* Rating.
+* Jumlah rating.
+
+Contoh formula sederhana:
+
+```text
+Popularity Score =
+Views + (Rating × Jumlah Rating)
+```
+
+Formula dapat disesuaikan pada tahap implementasi.
+
+---
+
+# 27. SEO
+
+Website harus memperhatikan SEO dasar.
+
+Setiap halaman/berita memiliki:
+
+* SEO Title.
+* Meta Description.
+* Slug.
+* Canonical URL.
+* Open Graph Title.
+* Open Graph Description.
+* Open Graph Image.
+
+Sistem juga menghasilkan:
+
+```text
+/sitemap.xml
+/robots.txt
+```
+
+URL harus SEO friendly.
+
+Contoh:
+
+```text
+/berita/lwp-pwnu-jatim-gelar-pelatihan-nazhir
+```
+
+bukan:
+
+```text
+/detail.php?id=123
+```
+
+---
+
+# 28. RESPONSIVE DESIGN
+
+Website wajib responsive.
+
+Breakpoints minimal:
+
+```text
+Mobile
+Tablet
+Desktop
+Large Desktop
+```
+
+Komponen:
+
+* Navbar.
+* Menu dropdown.
+* Card berita.
+* Form.
+* Table.
+* Dashboard.
+
+harus dapat digunakan dengan baik pada layar mobile.
+
+---
+
+# 29. KEAMANAN
+
+Implementasi wajib memperhatikan keamanan aplikasi.
+
+Minimal:
+
+1. CSRF Protection.
+2. XSS Protection.
+3. SQL Injection Protection.
+4. Authentication.
+5. Authorization.
+6. Password hashing.
+7. Rate limiting.
+8. Validasi input.
+9. Validasi upload file.
+10. Pembatasan tipe file.
+11. Pembatasan ukuran upload.
+12. Session security.
+13. Secure HTTP Header.
+14. Audit log untuk aktivitas penting.
+
+---
+
+# 30. AUDIT LOG
+
+Sistem menyimpan aktivitas penting pengguna.
+
+Contoh:
+
+```text
+Admin login
+Reporter membuat berita
+Reporter mengubah berita
+Reporter submit berita
+Redaktur approve berita
+Admin menghapus menu
+Admin membuat user
+```
+
+Data audit minimal:
+
+* User.
+* Aktivitas.
+* Module.
+* Record ID.
+* Timestamp.
+* IP/hash identifier sesuai kebijakan privasi.
+
+---
+
+# 31. DATABASE
+
+Struktur database awal yang direkomendasikan:
+
+```text
+users
+roles
+permissions
+role_user
+permission_role
+
+menus
+pages
+
+posts
+categories
+tags
+post_category
+post_tag
+
+media
+ratings
+
+contact_messages
+
+activity_logs
+
+settings
+```
+
+## 31.1 Tabel Users
+
+```text
+id
+name
+username
+email
+phone
+password
+avatar
+role_id
+status
+last_login_at
+created_at
+updated_at
+```
+
+## 31.2 Tabel Posts
+
+```text
+id
+title
+slug
+excerpt
+content
+featured_image
+author_id
+category_id
+status
+rejection_note
+published_at
+views
+created_at
+updated_at
+```
+
+## 31.3 Tabel Ratings
+
+```text
+id
+post_id
+rating
+visitor_hash
+created_at
+updated_at
+```
+
+## 31.4 Tabel Contact Messages
+
+```text
+id
+name
+email
+phone
+subject
+message
+status
+admin_note
+created_at
+updated_at
+```
+
+---
+
+# 32. ARSITEKTUR APLIKASI
+
+Struktur aplikasi Laravel direkomendasikan menggunakan pola modular berdasarkan domain.
+
+Contoh:
+
+```text
+app/
+├── Http/
+│   ├── Controllers/
+│   │   ├── Admin/
+│   │   ├── Reporter/
+│   │   ├── Redaktur/
+│   │   └── Frontend/
+│   │
+│   ├── Requests/
+│   └── Middleware/
+│
+├── Models/
+│
+├── Services/
+│
+└── Policies/
+```
+
+Business logic sebaiknya tidak seluruhnya ditempatkan di Controller.
+
+Gunakan:
+
+```text
+Controller
+    ↓
+Service
+    ↓
+Repository/Model
+    ↓
+Database
+```
+
+jika kompleksitas aplikasi memerlukannya.
+
+---
+
+# 33. API/AJAX RESPONSE STANDARD
+
+Seluruh endpoint AJAX menggunakan response JSON yang konsisten.
+
+Contoh:
+
+```json
+{
+    "success": true,
+    "message": "Data berhasil disimpan.",
+    "data": {}
+}
+```
+
+Jika error:
+
+```json
+{
+    "success": false,
+    "message": "Data gagal disimpan.",
+    "errors": {}
+}
+```
+
+HTTP status harus digunakan secara tepat:
+
+```text
+200 OK
+201 Created
+400 Bad Request
+401 Unauthorized
+403 Forbidden
+404 Not Found
+422 Validation Error
+500 Server Error
+```
+
+---
+
+# 34. ADMINISTRATOR ROUTE
+
+Contoh struktur URL:
+
+```text
+/admin
+/admin/dashboard
+
+/admin/users
+/admin/users/create
+
+/admin/menus
+/admin/pages
+
+/admin/posts
+/admin/posts/create
+
+/admin/categories
+/admin/tags
+
+/admin/media
+
+/admin/contact-messages
+
+/admin/settings
+/admin/activity-logs
+```
+
+---
+
+# 35. REPORTER ROUTE
+
+```text
+/reporter/dashboard
+
+/reporter/posts
+/reporter/posts/create
+/reporter/posts/{id}/edit
+```
+
+Reporter tidak dapat mengakses modul administrasi yang tidak menjadi kewenangannya.
+
+---
+
+# 36. REDAKTUR ROUTE
+
+```text
+/redaktur/dashboard
+
+/redaktur/posts
+/redaktur/posts/review/{id}
+```
+
+Redaktur dapat melihat berita yang masuk untuk direview.
+
+---
+
+# 37. WORKFLOW BERITA
+
+### Reporter
+
+```text
+Login
+ ↓
+Buat Berita
+ ↓
+Simpan Draft
+ ↓
+Edit
+ ↓
+Submit
+```
+
+### Redaktur
+
+```text
+Berita Masuk
+ ↓
+Review
+ ↓
+ ├── Reject → kembali ke Reporter
+ │
+ └── Approve
+        ↓
+      Publish
+```
+
+---
+
+# 38. NOTIFIKASI WORKFLOW
+
+Dashboard menampilkan notifikasi:
+
+### Reporter
+
+```text
+✓ Berita berhasil disubmit.
+
+⚠ Berita Anda dikembalikan oleh redaktur.
+```
+
+### Redaktur
+
+```text
+🔔 5 berita menunggu review.
+```
+
+### Admin
+
+```text
+🔔 12 pesan kontak baru.
+```
+
+---
+
+# 39. PERFORMANCE
+
+Target awal:
+
+* Homepage dapat dimuat dengan cepat.
+* Query database dioptimalkan.
+* Pagination untuk daftar data.
+* Lazy loading gambar.
+* Image optimization.
+* Browser caching.
+* Database indexing.
+* Asset minification.
+* Penggunaan cache Laravel jika diperlukan.
+
+Pagination default:
+
+```text
+Berita: 10–20 item/page
+Pengguna: 20 item/page
+Pesan: 20 item/page
+```
+
+---
+
+# 40. BACKUP
+
+Sistem perlu menyediakan mekanisme backup.
+
+Minimal:
+
+```text
+Database backup
+Media backup
+Configuration backup
+```
+
+Backup dapat dijadwalkan secara berkala menggunakan Laravel Scheduler/cron.
+
+---
+
+# 41. LOGGING
+
+Laravel logging digunakan untuk mencatat:
+
+* Application error.
+* Database error.
+* Authentication event.
+* AJAX exception.
+* Upload error.
+* System error.
+
+Log tidak boleh menampilkan informasi sensitif seperti password.
+
+---
+
+# 42. RESPONSIVE ADMIN DASHBOARD
+
+Dashboard admin juga harus responsive.
+
+Pada desktop:
+
+```text
+Sidebar
+    +
+Content
+```
+
+Pada mobile:
+
+```text
+☰
+Menu Sidebar
+
+Content
+```
+
+Tabel dapat menggunakan horizontal scrolling atau berubah menjadi card pada layar kecil.
+
+---
+
+# 43. KEBUTUHAN NON-FUNGSIONAL
+
+## Reliability
+
+Website harus mampu beroperasi secara stabil dan menyediakan mekanisme error handling.
+
+## Security
+
+Semua akses admin harus melalui authentication dan authorization.
+
+## Maintainability
+
+Kode harus mengikuti standar Laravel dan mudah dikembangkan.
+
+## Scalability
+
+Sistem harus dapat dikembangkan untuk:
+
+* LWP PWNU.
+* LWP PCNU.
+* Data wakaf.
+* Data tanah/aset.
+* Integrasi aplikasi lain.
+
+## Usability
+
+CMS harus mudah digunakan oleh pengguna non-programmer.
+
+---
+
+# 44. FUTURE DEVELOPMENT
+
+Arsitektur website sebaiknya disiapkan untuk pengembangan berikutnya.
+
+### Modul Wakaf
+
+```text
+Pendataan Wakaf
+Nazhir
+Wakif
+Lokasi
+Dokumen Wakaf
+Status Sertifikasi
+```
+
+### Modul Pertanahan
+
+```text
+Data Aset
+Lokasi Tanah
+Status Sertifikat
+Luas
+Pemanfaatan
+Dokumen
+```
+
+### Integrasi GIS
+
+Peta lokasi aset wakaf dan tanah dapat dikembangkan menggunakan:
+
+* OpenStreetMap.
+* Leaflet.
+* GIS server.
+
+### Integrasi Dokumen
+
+Dokumen dapat dikembangkan menjadi:
+
+```text
+PDF
+Sertifikat
+Akta Ikrar Wakaf
+Dokumen pendukung
+```
+
+dengan kontrol akses sesuai kebutuhan.
+
+---
+
+# 45. ACCEPTANCE CRITERIA
+
+Website dianggap memenuhi kebutuhan MVP apabila:
+
+### CMS
+
+* [ ] Admin dapat login.
+* [ ] Admin dapat membuat user.
+* [ ] Admin dapat menentukan role.
+* [ ] Admin dapat membuat menu.
+* [ ] Admin dapat membuat submenu.
+* [ ] Admin dapat membuat halaman statis.
+* [ ] Admin dapat mengubah halaman.
+* [ ] Admin dapat menghapus halaman.
+
+### Berita
+
+* [ ] Reporter dapat membuat berita.
+* [ ] Reporter dapat menyimpan draft.
+* [ ] Reporter dapat mengirim berita untuk review.
+* [ ] Redaktur dapat melihat berita masuk.
+* [ ] Redaktur dapat menyetujui berita.
+* [ ] Redaktur dapat menolak berita.
+* [ ] Berita approved dapat dipublikasikan.
+* [ ] Pengunjung dapat membaca berita.
+
+### Rating
+
+* [ ] Pengunjung dapat memberikan rating.
+* [ ] Rating dihitung otomatis.
+* [ ] Sistem mencegah rating berulang secara tidak wajar.
+* [ ] Rating dapat dilihat pada detail berita.
+
+### Kontak
+
+* [ ] Pengunjung dapat mengirim pesan.
+* [ ] Email/nomor HP dapat digunakan sebagai kontak.
+* [ ] Sistem melakukan validasi.
+* [ ] Pesan tersimpan di database.
+* [ ] Admin dapat melihat pesan.
+* [ ] Admin dapat mengubah status pesan.
+
+### AJAX
+
+* [ ] Form menggunakan AJAX.
+* [ ] CRUD menggunakan AJAX jika memungkinkan.
+* [ ] Loading bar tampil selama request.
+* [ ] Tombol submit disabled selama proses.
+* [ ] Success notification tampil.
+* [ ] Error notification tampil.
+* [ ] Tidak terjadi double submit.
+
+### Security
+
+* [ ] CSRF aktif.
+* [ ] Authorization diterapkan.
+* [ ] Password di-hash.
+* [ ] Validasi upload aktif.
+* [ ] Rate limiting diterapkan pada endpoint tertentu.
+* [ ] Activity log tersedia.
+
+---
+
+# 46. MVP RELEASE
+
+Versi pertama website (**MVP**) mencakup:
+
+```text
+1. Homepage
+2. Profil
+3. Tentang LWP
+4. Sejarah
+5. Struktur Organisasi
+6. Berita
+7. Kategori Berita
+8. Tag
+9. Rating Berita
+10. Galeri/Media
+11. Kontak Kami
+12. Dashboard Admin
+13. Dashboard Reporter
+14. Dashboard Redaktur
+15. User Management
+16. Role Management
+17. Menu Management
+18. Static Page Management
+19. Editorial Workflow
+20. AJAX Interaction
+21. Global Loading Bar
+22. Notification System
+23. Search
+24. SEO Basic
+25. Activity Log
+```
+
+---
+
+# 47. ROADMAP PENGEMBANGAN
+
+## Tahap 1 — Core CMS
+
+```text
+Authentication
+User
+Role
+Dashboard
+Menu
+Page
+Media
+Settings
+```
+
+## Tahap 2 — Publishing
+
+```text
+Category
+Tag
+Post
+Rich Text Editor
+Editorial Workflow
+Rating
+Search
+```
+
+## Tahap 3 — Public Website
+
+```text
+Homepage
+Profile
+News
+Contact
+Gallery
+SEO
+Responsive UI
+```
+
+## Tahap 4 — Enhancement
+
+```text
+Analytics
+Notification
+Advanced SEO
+Caching
+Backup
+Audit Log
+```
+
+## Tahap 5 — LWP Digital Platform
+
+```text
+Data Wakaf
+Data Tanah
+GIS
+Digital Archive
+Nazhir Management
+Wakif Management
+Asset Management
+Document Management
+```
+
+---
+
+# 48. KESIMPULAN
+
+Website LWP PWNU dirancang bukan sekadar sebagai website profil organisasi, tetapi sebagai **platform informasi dan publikasi resmi LWP** yang dapat dikelola secara mandiri oleh organisasi.
+
+Konsep CMS memungkinkan administrator mengelola struktur website dan halaman, sementara mekanisme **Reporter → Redaktur → Publish** memastikan kualitas dan validitas informasi yang dipublikasikan.
+
+Penggunaan Laravel, Tailwind CSS, MySQL, dan AJAX memberikan fondasi yang modern, terstruktur, responsive, serta mudah dikembangkan menjadi platform digital LWP yang lebih komprehensif di masa mendatang.
+
+Arsitektur aplikasi juga harus dipersiapkan agar website dapat dikembangkan dari sekadar **CMS publikasi** menjadi **Digital Platform LWP** yang nantinya dapat mengelola data wakaf, pertanahan, aset, dokumen, nazhir, serta informasi spasial secara terintegrasi.
